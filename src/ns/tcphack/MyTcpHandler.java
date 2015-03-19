@@ -55,7 +55,7 @@ class MyTcpHandler extends TcpHandler {
 			byte seq1 = 0;				//seq
 			byte seq2 = 0;
 			byte seq3 = 0;
-			byte seq4 = 1;
+			byte seq4 = 0;
 			byte ack1 = 0;				//ack
 			byte ack2 = 0;
 			byte ack3 = 0;
@@ -66,6 +66,8 @@ class MyTcpHandler extends TcpHandler {
 			byte windowsize2 = (byte)128;
 			byte checksum1 = 0;
 			byte checksum2 = 0;
+			byte urgent1 = 0;
+			byte urgent2 = 0;
 			
 			//making packet
 			packetlist.add(version);
@@ -100,14 +102,141 @@ class MyTcpHandler extends TcpHandler {
 			packetlist.add(windowsize2);
 			packetlist.add(checksum1);
 			packetlist.add(checksum2);
+			packetlist.add(urgent1);
+			packetlist.add(urgent2);
 			
-			byte[] packet = new byte[packetlist.size()];
+			byte[] synpacket = new byte[packetlist.size()];
 			int i = 0;
-			while (i < packet.length) {
-				packet[i] = packetlist.get(i);
+			while (i < synpacket.length) {
+				synpacket[i] = packetlist.get(i);
 				i++;
 			}
-			this.sendData(packet);
+			
+			this.sendData(synpacket);
+			
+			//receive a packet
+			byte[] ackpack = this.receiveData(100);
+			
+			//send a FIN packet
+			packetlist.clear();
+			
+			seq4++;
+			flags--;
+			
+			packetlist.add(version);
+			packetlist.add(empty);
+			packetlist.add(empty);
+			packetlist.add(empty);
+			packetlist.add(payload1);
+			packetlist.add(payload2);
+			packetlist.add(nextHeader);
+			packetlist.add(hoplimit);
+			for (byte part : ownip) {
+				packetlist.add(part);
+			}
+			for (byte part : serverip) {
+				packetlist.add(part);
+			}
+			packetlist.add(srcport1);
+			packetlist.add(srcport2);
+			packetlist.add(destport1);
+			packetlist.add(destport2);
+			packetlist.add(seq1);
+			packetlist.add(seq2);
+			packetlist.add(seq3);
+			packetlist.add(seq4);
+			packetlist.add(ack1);
+			packetlist.add(ack2);
+			packetlist.add(ack3);
+			packetlist.add(ack4);
+			packetlist.add(datoffresflag);
+			packetlist.add(flags);
+			packetlist.add(windowsize1);
+			packetlist.add(windowsize2);
+			packetlist.add(checksum1);
+			packetlist.add(checksum2);
+			packetlist.add(urgent1);
+			packetlist.add(urgent2);
+			
+			byte[] fin = new byte[packetlist.size()];
+			i = 0;
+			while (i < fin.length) {
+				fin[i] = packetlist.get(i);
+				i++;
+			}
+			
+			this.sendData(fin);
+			
+			//part for sending the get http request. Not working yet
+			
+/*			if (ackpack.length != 0) {
+				
+				packetlist.clear();
+				
+				ack4++;
+				seq4++;
+				flags = 24;
+				payload1 = 1;
+				payload2 = 55;
+				
+				packetlist.add(version);
+				packetlist.add(empty);
+				packetlist.add(empty);
+				packetlist.add(empty);
+				packetlist.add(payload1);
+				packetlist.add(payload2);
+				packetlist.add(nextHeader);
+				packetlist.add(hoplimit);
+				for (byte part : ownip) {
+					packetlist.add(part);
+				}
+				for (byte part : serverip) {
+					packetlist.add(part);
+				}
+				packetlist.add(srcport1);
+				packetlist.add(srcport2);
+				packetlist.add(destport1);
+				packetlist.add(destport2);
+				packetlist.add(seq1);
+				packetlist.add(seq2);
+				packetlist.add(seq3);
+				packetlist.add(seq4);
+				packetlist.add(ack1);
+				packetlist.add(ack2);
+				packetlist.add(ack3);
+				packetlist.add(ack4);
+				packetlist.add(datoffresflag);
+				packetlist.add(flags);
+				packetlist.add(windowsize1);
+				packetlist.add(windowsize2);
+				packetlist.add(checksum1);
+				packetlist.add(checksum2);
+				packetlist.add(urgent1);
+				packetlist.add(urgent2);
+				
+				String http = ("GET /?nr=1606824 HTTP/1.1\n" +
+						"Host: [2001:67c:2564:a170:a00:27ff:fe11:cecb]\n" +
+						"Connection: close\n" +
+						"User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; nl; rv:1.8.0.3) Gecko/20060426 Firefox/1.5.0.3\n" +
+						"Accept: text/xml,text/html,text/plain,image/png,image/jpeg,image/gif\n" +
+						"Accept-Charset: ISO-8859-1,utf-8");
+				byte[] httpb = http.getBytes();
+				for (byte charry : httpb) {
+					packetlist.add(charry);
+				}
+				
+				byte[] get = new byte[packetlist.size()];
+				i = 0;
+				while (i < get.length) {
+					get[i] = packetlist.get(i);
+					i++;
+				}
+				
+				this.sendData(get);
+			}*/
+			
+			
+			
 			done = true;
 		}   
 	}
