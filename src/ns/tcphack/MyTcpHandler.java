@@ -22,6 +22,12 @@ class MyTcpHandler extends TcpHandler {
 			//
 			//           The data you'll receive and send will and should contain all packet 
 			//           data from the network layer and up.
+
+            byte[] dtout = [0110]; //Version 6
+            this.sendData(dtout);
+            byte[] dtin = this.receiveData(1000);
+            System.out.println("incoming dataArray: " + Array.toString(dtin));
+
 		}   
 	}
 }
