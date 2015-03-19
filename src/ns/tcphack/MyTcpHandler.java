@@ -4,11 +4,13 @@ import java.util.Arrays;
 
 class MyTcpHandler extends TcpHandler {
 	
-	public static final byte[] SRC = new byte[16]; //TODO add address
-	public static final byte[] DST = new byte[16]; //TODO add address
-	public static final byte[] HOP_LMT = new byte[]{0x1e}; //hop limit = 30
+	public static final String SRC = "2001:610:1908:f000:84ce:5142:acd3:a2dd";
+	public static final String DST = "2001:67c:2564:a170:a00:27ff:fe11:cecb";
+	public static final byte HOP_LMT = 30; //hop limit = 30
 	
 	public static void main(String[] args) {
+		//http://[2001:67c:2564:a170:a00:27ff:fe11:cecb]:7711/?nr=1234567
+		
 		new MyTcpHandler();
 	}
 
@@ -49,10 +51,26 @@ class MyTcpHandler extends TcpHandler {
 	 * @return byte[] with src and dst addresses copied into
 	 */
 	public byte[] addDefault(byte[] packet) {
-		System.arraycopy(SRC, 0, packet, 8, SRC.length);
-		System.arraycopy(DST, 0, packet, 24, DST.length);
-		System.arraycopy(HOP_LMT, 0, packet, 7, HOP_LMT.length);
+		byte[] src = convertIP(SRC);
+		byte[] dst = convertIP(DST);
+		System.arraycopy(src, 0, packet, 8, src.length);
+		System.arraycopy(dst, 0, packet, 24, dst.length);
+		packet[7] = HOP_LMT;
 		return packet;
+	}
+	
+	//2001:67c:2564:a170:a00:27ff:fe11:cecb
+	public byte[] convertIP(String ip) {
+		byte[] res = new byte[16];
+		String[] parts = ip.split(":");
+		for (int i = 0; i < parts.length; i++) {
+			if (parts[i].length() < 4) {
+				parts[i] = "0" + parts[i]; //Retrieving omitted single leading zero
+			} //[0] [1] [2] [3] ... [15]
+			res[i*2] = parts[i].substring(0, 2).getBytes()[0];
+			res[i*2+1] = parts[i].substring(2).getBytes()[0];
+		}
+		return res;
 	}
 	
 }
