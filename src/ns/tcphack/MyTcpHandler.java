@@ -40,7 +40,7 @@ class MyTcpHandler extends TcpHandler {
             dtOut[4] = EMPTY; //payload length (continued)
             dtOut[5] = (byte) 0x14; //payload length
             dtOut[6] = (byte) 0xfd; //nextHeader (253)
-            dtOut[6] = (byte) 0X06; //nextHeader (6)
+            //dtOut[6] = (byte) 0X06; //nextHeader (6)
             
             //TCP
             byte[] tcp = new byte[20];
@@ -79,13 +79,13 @@ class MyTcpHandler extends TcpHandler {
 	}
 	
 	public byte[] tcpAddDefault(byte[] header) {
-		header[0] = EMPTY; //src port
-		header[1] = (byte) 0xff; //src port
+		header[0] = EMPTY; //src port (255)
+		header[1] = (byte) 0xff; //src port 
 		header[2] = (byte) 0x1e; //dst port (7711)
 		header[3] = (byte) 0x1f; //dst port
 		
-		header[2] = (byte) 0x1e; //dst test port (7701)
-		header[3] = (byte) 0x15; //dst test port
+		//header[2] = (byte) 0x1e; //dst test port (7701)
+		//header[3] = (byte) 0x15; //dst test port
 		
 		for (int i = 4; i < 8; i++) { //SEQ
 			header[i] = EMPTY;
@@ -93,8 +93,10 @@ class MyTcpHandler extends TcpHandler {
 		for (int i = 8; i < 12; i++) { //ACK
 			header[i] = EMPTY;
 		}
-		header[12] = EMPTY; //data offset, reserved and NS
+		header[12] = (byte) 0xf0; //data offset, reserved and NS
 		header[13] = (byte) 0x02; //SYN flag set
+		header[14] = (byte) 0xff; //window
+		header[16] = (byte) 0x00; //window
 		
 		
 		return header;
@@ -108,10 +110,11 @@ class MyTcpHandler extends TcpHandler {
 		for (int i = 0; i < parts.length; i++) {
 			if (parts[i].length() < 4) {
 				parts[i] = "0" + parts[i]; //Retrieving omitted single leading zero
-			} //[0] [1] [2] [3] ... [15]
+			}
 			res[i*2] = parts[i].substring(0, 2).getBytes()[0];
 			res[i*2+1] = parts[i].substring(2).getBytes()[0];
 		}
+		System.out.println(Arrays.toString(res));
 		return res;
 	}
 	
