@@ -6,6 +6,7 @@ class MyTcpHandler extends TcpHandler {
 	
 	public static final String SRC = "2001:610:1908:f000:84ce:5142:acd3:a2dd";
 	public static final String DST = "2001:67c:2564:a170:a00:27ff:fe11:cecb";
+	public static final byte EMPTY = 0b00000000;
 	public static final byte HOP_LMT = 30; //hop limit = 30
 	
 	public static void main(String[] args) {
@@ -31,16 +32,16 @@ class MyTcpHandler extends TcpHandler {
 			//
 			//           The data you'll receive and send will and should contain all packet 
 			//           data from the network layer and up.
-
+			
             byte[] dtout = new byte[40]; //An outgoing packet, with size 40
+            
             this.addDefault(dtout); //outgoing now has addresses
             
             
-            
-            
             this.sendData(dtout);
-            byte[] dtin = this.receiveData(1000);
-            System.out.println("incoming dataArray: " + Arrays.toString(dtin));
+            done = true;
+            //byte[] dtin = this.receiveData(1000);
+            //System.out.println("incoming dataArray: " + Arrays.toString(dtin));
 
 		}   
 	}
@@ -51,11 +52,16 @@ class MyTcpHandler extends TcpHandler {
 	 * @return byte[] with src and dst addresses copied into
 	 */
 	public byte[] addDefault(byte[] packet) {
+		packet[0] = (byte) 0x60; //version 6, and 4 0's for traffic class
+		packet[1] = EMPTY; 
+		packet[2] = EMPTY;
+		packet[3] = EMPTY; //empty bytes for traffic class and flow label
+		
+		packet[7] = HOP_LMT;
 		byte[] src = convertIP(SRC);
 		byte[] dst = convertIP(DST);
 		System.arraycopy(src, 0, packet, 8, src.length);
 		System.arraycopy(dst, 0, packet, 24, dst.length);
-		packet[7] = HOP_LMT;
 		return packet;
 	}
 	
