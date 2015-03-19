@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 class MyTcpHandler extends TcpHandler {
 	
-	public static final String SRC = "2001:610:1908:f000:84ce:5142:acd3:a2dd";
+	public static final String SRC = "2001:610:1908:f000:2ab2:bdff:fe5a:7ad5";
 	public static final String DST = "2001:67c:2564:a170:a00:27ff:fe11:cecb";
 	public static final byte EMPTY = 0b00000000;
 	public static final byte HOP_LMT = 30; //hop limit = 30
@@ -33,12 +33,25 @@ class MyTcpHandler extends TcpHandler {
 			//           The data you'll receive and send will and should contain all packet 
 			//           data from the network layer and up.
 			
-            byte[] dtout = new byte[40]; //An outgoing packet, with size 40
+            byte[] dtOut = new byte[60]; //An outgoing packet, with size 40
             
-            this.addDefault(dtout); //outgoing now has addresses
+            //IPv6
+            dtOut = this.addDefault(dtOut); //outgoing now has addresses
+            dtOut[4] = EMPTY; //payload length (continued)
+            dtOut[5] = (byte) 0x14; //payload length
+            dtOut[6] = (byte) 0xfd; //nextHeader (253)
+            dtOut[6] = (byte) 0X06; //nextHeader (6)
             
+            //TCP
+            byte[] tcp = new byte[20];
+            tcp = tcpAddDefault(tcp);
             
-            this.sendData(dtout);
+            //Combining IP and TCP
+            System.arraycopy(tcp, 0, dtOut, 40, tcp.length); //pasting the tcp payload after the ip-header
+            
+            //Sending
+            this.sendData(dtOut);
+            System.out.println("Packet sent");
             done = true;
             //byte[] dtin = this.receiveData(1000);
             //System.out.println("incoming dataArray: " + Arrays.toString(dtin));
@@ -56,7 +69,7 @@ class MyTcpHandler extends TcpHandler {
 		packet[1] = EMPTY; 
 		packet[2] = EMPTY;
 		packet[3] = EMPTY; //empty bytes for traffic class and flow label
-		
+		//Bytes 4 till 6 are to be filled by caller
 		packet[7] = HOP_LMT;
 		byte[] src = convertIP(SRC);
 		byte[] dst = convertIP(DST);
@@ -64,6 +77,29 @@ class MyTcpHandler extends TcpHandler {
 		System.arraycopy(dst, 0, packet, 24, dst.length);
 		return packet;
 	}
+	
+	public byte[] tcpAddDefault(byte[] header) {
+		header[0] = EMPTY; //src port
+		header[1] = (byte) 0xff; //src port
+		header[2] = (byte) 0x1e; //dst port (7711)
+		header[3] = (byte) 0x1f; //dst port
+		
+		header[2] = (byte) 0x1e; //dst test port (7701)
+		header[3] = (byte) 0x15; //dst test port
+		
+		for (int i = 4; i < 8; i++) { //SEQ
+			header[i] = EMPTY;
+		}
+		for (int i = 8; i < 12; i++) { //ACK
+			header[i] = EMPTY;
+		}
+		header[12] = EMPTY; //data offset, reserved and NS
+		header[13] = (byte) 0x02; //SYN flag set
+		
+		
+		return header;
+	}
+	
 	
 	//2001:67c:2564:a170:a00:27ff:fe11:cecb
 	public byte[] convertIP(String ip) {
